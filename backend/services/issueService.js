@@ -1,58 +1,32 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { randomUUID } = require("crypto");
+// Chooses where issues are stored. The controller always imports THIS file,
+// so routes and controller never change when the storage changes.
+//
+//   DYNAMODB_TABLE set  -> Amazon DynamoDB             (Lab 7: Lambda, or your PC with Floci)
+//   DATABASE_URL set    -> Neon Postgres               (Lab 5: required on Vercel)
+//   both empty          -> backend/data/issues.json    (Lab 4: your PC only)
+const dynamoTable = (process.env.DYNAMODB_TABLE || '').trim();
+const databaseUrl = (process.env.DATABASE_URL || '').trim();
+const inTheCloud = Boolean(process.env.VERCEL) || process.env.NODE_ENV === 'production';
 
-const DATA_FILE = path.join(__dirname, "..", "data", "issues.json");
-
-async function readIssues() {
-  try {
-    const text = await fs.readFile(DATA_FILE, "utf8");
-
-    if (!text.trim()) return [];
-
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    if (error.code === "ENOENT") return [];
-    if (error instanceof SyntaxError) return [];
-    throw error;
-  }
+function missingDatabase() {
+  // Vercel's file system is temporary, so the JSON file cannot be used there.
+  // Answering 500 (while /api/health still works) points straight at the missing setting.
+  throw new Error('DATABASE_URL is not set. Add it in Vercel: Settings > Environment Variables, then Redeploy.');
 }
 
-async function writeIssues(issues) {
-  await fs.writeFile(DATA_FILE, JSON.stringify(issues, null, 2));
+let service;
+if (dynamoTable) {
+  service = require('./dynamoIssueService');
+  console.log(`Issue storage: DynamoDB table ${dynamoTable}`);
+} else if (databaseUrl) {
+  service = require('./neonIssueService');
+  console.log('Issue storage: Neon Postgres (DATABASE_URL)');
+} else if (inTheCloud) {
+  service = { readIssues: missingDatabase, createIssue: missingDatabase, updateIssueStatus: missingDatabase };
+  console.error('Issue storage: NOT CONFIGURED. DATABASE_URL is missing.');
+} else {
+  service = require('./jsonIssueService');
+  console.log('Issue storage: local JSON file (backend/data/issues.json)');
 }
 
-async function createIssue(input) {
-  const issues = await readIssues();
-
-  const issue = {
-    id: randomUUID(),
-    title: input.title.trim(),
-    description: input.description.trim(),
-    priority: input.priority,
-    status: "Open",
-    createdAt: new Date().toISOString(),
-  };
-
-  issues.push(issue);
-  await writeIssues(issues);
-  return issue;
-}
-
-async function updateIssueStatus(id, status) {
-  const issues = await readIssues();
-  const issue = issues.find((item) => item.id === id);
-
-  if (!issue) return null;
-
-  issue.status = status;
-  await writeIssues(issues);
-  return issue;
-}
-
-module.exports = {
-  readIssues,
-  createIssue,
-  updateIssueStatus,
-};
+module.exports = service;

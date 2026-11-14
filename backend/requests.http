@@ -1,0 +1,99 @@
+@baseUrl = http://localhost:3000
+
+### T01 View all issues -> 200 + JSON array
+GET {{baseUrl}}/api/issues
+
+### T02 Create a valid issue -> 201 + complete created issue
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "title": "Printer unavailable",
+  "description": "The shared printer is not responding.",
+  "priority": "Medium"
+}
+
+### T03 Create with a missing title -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "description": "Missing valid title",
+  "priority": "Medium"
+}
+
+### T04 Create with an invalid priority -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "title": "Projector flickering",
+  "description": "The projector in room B204 flickers.",
+  "priority": "Critical"
+}
+
+### T05 Change the status of an existing issue -> 200 + status Resolved
+# Replace the id with one returned by T01 or T02.
+PATCH {{baseUrl}}/api/issues/ISS-101/status
+Content-Type: application/json
+
+{
+  "status": "Resolved"
+}
+
+### T06 Change to a status that is not allowed -> 400 VALIDATION_ERROR
+PATCH {{baseUrl}}/api/issues/ISS-101/status
+Content-Type: application/json
+
+{
+  "status": "Deleted"
+}
+
+### T07 Update an unknown issue -> 404 ISSUE_NOT_FOUND
+PATCH {{baseUrl}}/api/issues/does-not-exist/status
+Content-Type: application/json
+
+{
+  "status": "Resolved"
+}
+
+### T09 Create while sending server-owned fields -> 201, client values ignored
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "id": "HACKED-1",
+  "title": "Projector flickering",
+  "description": "The projector in room B204 flickers.",
+  "priority": "Low",
+  "status": "Resolved",
+  "createdAt": "2000-01-01T00:00:00.000Z"
+}
+
+### T10 Create without JSON -> 415 UNSUPPORTED_MEDIA_TYPE
+POST {{baseUrl}}/api/issues
+Content-Type: text/plain
+
+title=Printer
+
+### T11 Create with malformed JSON (trailing comma) -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "title": "Printer unavailable",
+  "description": "The shared printer is not responding.",
+  "priority": "Medium",
+}
+
+### T12 Unknown route -> 404 ROUTE_NOT_FOUND
+PATCH {{baseUrl}}/api/fake-url
+Content-Type: application/json
+
+{}
+
+### Lab 5: health check -> 200
+GET {{baseUrl}}/api/health
+
+### Lab 7: count issues -> 200 + { "count": n }
+GET {{baseUrl}}/api/issues/count

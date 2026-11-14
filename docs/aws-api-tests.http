@@ -1,0 +1,41 @@
+### Lab 7 API tests. Set @baseUrl to your API_URL (no slash at the end),
+### then click "Send Request" above each test (VS Code REST Client).
+@baseUrl = http://PASTE-YOUR-API-ID.execute-api.localhost.floci.io:4566
+
+### T1: health -> 200
+GET {{baseUrl}}/api/health
+
+### T2: create a valid issue -> 201 and a new id
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "title": "Login page shows a blank screen",
+  "description": "Created through API Gateway in Lab 7",
+  "priority": "High"
+}
+
+### T3: invalid issue -> 400 VALIDATION_ERROR
+POST {{baseUrl}}/api/issues
+Content-Type: application/json
+
+{
+  "title": "Hi",
+  "description": "Too short and wrong priority",
+  "priority": "Critical"
+}
+
+### T4: no DELETE route -> 404 {"message":"Not Found"} from API Gateway
+DELETE {{baseUrl}}/api/issues/ISS-101
+
+### T5: CORS preflight from our website -> Access-Control-Allow-Origin: http://localhost:4566
+OPTIONS {{baseUrl}}/api/issues
+Origin: http://localhost:4566
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type
+
+### T6: CORS preflight from another site -> NO Access-Control-Allow-Origin header
+OPTIONS {{baseUrl}}/api/issues
+Origin: http://evil.example
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type

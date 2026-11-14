@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/issues",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/api/issues",
+      "sourceIp": "127.0.0.1"
+    }
+  },
+  "isBase64Encoded": false,
+  "body": "{\"title\": \"Hi\", \"description\": \"Broken projector\", \"priority\": \"Critical\"}"
+}

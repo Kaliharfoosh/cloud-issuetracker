@@ -1,0 +1,235 @@
+{
+  "info": {
+    "name": "Cloud Issue Tracker API",
+    "description": "Lab 4 test collection. Covers every row of docs/api-test-plan.md (T01-T12). Set the baseUrl variable to the API you want to test: http://localhost:3000 locally, or your Vercel / API Gateway domain.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "issueId",
+      "value": "REPLACE-WITH-AN-ID-FROM-GET-OR-POST",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "View issues",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T01 -- expect 200 and a JSON array of issues."
+      }
+    },
+    {
+      "name": "Create issue",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Printer unavailable\",\n    \"description\": \"The shared printer is not responding.\",\n    \"priority\": \"Medium\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T02 -- expect 201 with a server-generated id, status Open and the current createdAt."
+      }
+    },
+    {
+      "name": "Change issue status",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"Resolved\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues/{{issueId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues", "{{issueId}}", "status"]
+        },
+        "description": "T05 -- expect 200 and the complete issue with status Resolved."
+      }
+    },
+    {
+      "name": "Invalid Create Issue",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"\",\n    \"description\": \"Missing valid title\",\n    \"priority\": \"Urgent\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T03 -- expect 400 VALIDATION_ERROR with the title message. Fix the title and send again: the message changes to the priority rule, which covers T04."
+      }
+    },
+    {
+      "name": "Invalid Status Change",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"Deleted\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues/{{issueId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues", "{{issueId}}", "status"]
+        },
+        "description": "T06 -- expect 400 VALIDATION_ERROR: Status must be Open or Resolved."
+      }
+    },
+    {
+      "name": "Update Unknown Issue",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"status\": \"Resolved\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues/does-not-exist/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues", "does-not-exist", "status"]
+        },
+        "description": "T07 -- expect 404 ISSUE_NOT_FOUND in the standard error shape."
+      }
+    },
+    {
+      "name": "View Issues When None Exist",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T08 -- empty the store first (replace data/issues.json with [], or use an empty table), then expect 200 and an empty array, not a 404."
+      }
+    },
+    {
+      "name": "Create Issue with Server-Owned Fields",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"id\": \"HACKED-1\",\n    \"title\": \"Projector flickering\",\n    \"description\": \"The projector in room B204 flickers.\",\n    \"priority\": \"Low\",\n    \"status\": \"Resolved\",\n    \"createdAt\": \"2000-01-01T00:00:00.000Z\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T09 -- expect 201. The id is a new server value, the status is Open and createdAt is now. None of the values sent by the client were stored."
+      }
+    },
+    {
+      "name": "Create Issue Without JSON",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "text/plain" }],
+        "body": {
+          "mode": "raw",
+          "raw": "title=Printer",
+          "options": { "raw": { "language": "text" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T10 -- expect 415 UNSUPPORTED_MEDIA_TYPE."
+      }
+    },
+    {
+      "name": "Create Issue with Malformed JSON",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"title\": \"Printer unavailable\",\n    \"description\": \"The shared printer is not responding.\",\n    \"priority\": \"Medium\",\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/issues",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues"]
+        },
+        "description": "T11 -- a trailing comma after the last item. Expect 400 VALIDATION_ERROR: Request body is not valid JSON. The server keeps running."
+      }
+    },
+    {
+      "name": "Unknown Route",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/fake-url",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "fake-url"]
+        },
+        "description": "T12 -- expect 404 ROUTE_NOT_FOUND, which is different from ISSUE_NOT_FOUND."
+      }
+    },
+    {
+      "name": "Health check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Lab 5 -- expect 200. Answers without touching the database, so it separates a deployment problem from a database problem."
+      }
+    },
+    {
+      "name": "Count issues",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/issues/count",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "issues", "count"]
+        },
+        "description": "Lab 7 Part 8 -- expect 200 and { \"count\": n }."
+      }
+    }
+  ]
+}

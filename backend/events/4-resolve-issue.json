@@ -1,0 +1,17 @@
+{
+  "version": "2.0",
+  "rawPath": "/api/issues/ISS-101/status",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "PATCH",
+      "path": "/api/issues/ISS-101/status",
+      "sourceIp": "127.0.0.1"
+    }
+  },
+  "isBase64Encoded": false,
+  "body": "{\"status\": \"Resolved\"}"
+}

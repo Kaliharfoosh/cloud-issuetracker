@@ -44,6 +44,15 @@ async function listIssues(req, res, next) {
   }
 }
 
+async function countIssues(req, res, next) {
+  try {
+    const issues = await issueService.readIssues();
+    res.status(200).json({ count: issues.length });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function createIssue(req, res, next) {
   try {
     if (!req.is("application/json")) {
@@ -111,6 +120,7 @@ async function updateIssueStatus(req, res, next) {
 
 module.exports = {
   listIssues,
+  countIssues,
   createIssue,
   updateIssueStatus,
 };
